@@ -1,7 +1,7 @@
 from datetime import datetime # imported to add timestamps
 
 # Implementing the object for the database log
-class DBLog:
+class LogEntry:
     def __init__(self, transaction_id, attribute, old_value, new_value, status):
         self.transaction_id = transaction_id
         self.attribute = attribute

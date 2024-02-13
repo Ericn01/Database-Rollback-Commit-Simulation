@@ -1,7 +1,7 @@
 # Adv DB Winter 2024 - 1
-import csv # write data to CSV files
-import random
-from DB_Log import DBLog # Import the DBLog class, which will be the objects that populate our DB_Log list
+import random # generate pseudo-random values
+from LogEntry import LogEntry # Import the LogEntry class, which will be the objects that populate our DB_Log list
+from helper_functions import write_to_secondary_memory, write_db_log_to_csv, get_database_entry, print_db_log, get_attribute_index
 
 data_base = []  # Global binding for the Database contents
 '''
@@ -14,87 +14,56 @@ transactions = [['1', 'Department', 'Music'], ['5', 'Civil_status', 'Divorced'],
 # Every entry in DB_Log will represent a transaction and contain data like the transaction ID, the data before the transaction, the data before the transaction, and whether the transaction has been commited.
 DB_Log = []  # <-- You WILL populate this as you go
 DATABASE_FILE_PATH = 'Employees_DB_ADV.csv'
-JOURNAL_FILE_PATH = 'Transaction_Journal.csv'
+JOURNAL_FILE_PATH = 'DB_Log.csv'
 SECONDARY_MEMORY_FILE_PATH = 'Committed_Employees_DB_ADV.csv' # Using this instead of overwriting the original database file 
 
-
-def write_to_secondary_memory():
-    # Save committed data to a secondary memory system (CSV file)
-    with open(SECONDARY_MEMORY_FILE_PATH, 'w', newline='') as database_file:
-        csv_writer = csv.writer(database_file)
-        csv_writer.writerows(data_base)
 
 def recovery_script(log_entries: list):
     '''
     Restore the database to a stable and sound condition by processing the DB log.
     '''
     for log_entry in log_entries:
-        attribute_index = get_attribute_index(log_entry['attribute'])
         status = log_entry['status'] # retrieve the status of the given transaction / log entry
         if status == 'not-executed':
             # If the transaction was not executed, there is nothing to do
             continue
         elif status == 'rolled-back':
             # If the transaction has a status of rolled back, undo the changes
-            index = log_entry['transaction_id']
-            transaction = get_database_entry(str(index))
-            data_base[int(transaction[0])][attribute_index] = log_entry['old_value']
+            index = log_entry['transaction_id'] # find the ID of the transaction to be rolled back
+            transaction = get_database_entry(str(index), data_base) # retrieve the entry at said index
+            attribute_index = get_attribute_index(log_entry['attribute'], data_base) # find the position of the column / attribute that we're changing
+            # --> We now have both the entry (m) and column (n) in our m x n matrix / data base, and we can revert the values to those in the log.
+
+            data_base[int(transaction[0])][attribute_index] = log_entry['new_value'] # We use 'new_value' because in the log entry, after commit occurs, we change the old_value --> new_value
         elif status == 'committed':
             # If the transaction was committed, there is nothing to do
             continue
-    write_to_secondary_memory() # Update the previous values.
     print("Recovery completed.")
 
 def commit_transaction(index, attribute, attribute_index, old_value, new_value):
     # Save changes to the database
     data_base[index][attribute_index] = new_value
-
-    commit_transaction_log_entry = DBLog(index, attribute, old_value, new_value, 'committed')
+    commit_transaction_log_entry = LogEntry(index, attribute, old_value, new_value, 'committed')
     # Save commit entry to the journal
     DB_Log.append(commit_transaction_log_entry)
-    # Write the new information to secondary memory
+    # Write changes to secondary memory
+    write_to_secondary_memory(SECONDARY_MEMORY_FILE_PATH, data_base)
     
 
 # apply the rollback status to every transaction that has been processed
-def apply_rollback(failed_transaction_index):
+def apply_rollback():
     new_DB_Log = []  # Create a new list to store the updated entries
-    
     # This will add a new entry to every transaction that has been commited, indicating that 
     for log_entry in DB_Log:
-        id, attr, old_val, new_val =  log_entry['transaction_id'], log_entry['attribute'], log_entry['old_value'], log_entry['new_value']
-        rollback_entry = DBLog(id, attr, old_val, new_val, 'rolled-back')
+        id, attr, new_val, old_val =  log_entry['transaction_id'], log_entry['attribute'], log_entry['old_value'], log_entry['new_value'] # In the rollback, the old value becomes the new value, vise-versa
+        rollback_entry = LogEntry(id, attr, old_val, new_val, 'rolled-back')
         new_DB_Log.append(log_entry)  # Append the original entry
         new_DB_Log.append(rollback_entry)  # Append the rollback entry
     
     # Update the original DB_Log list with the new entries
     DB_Log.clear() 
-    DB_Log.extend(new_DB_Log)
+    DB_Log.extend(new_DB_Log) 
 
-    # Retrieve the transaction that failed
-    failed_transaction = transactions[failed_transaction_index]
-    # Extract the data from the transaction
-    index, attribute, new_value = failed_transaction
-    # Find the database entry that matches our transaction ID and retrieve the previous value for the given attribute
-    corresponding_db_entry = get_database_entry(index)
-    attribute_index = get_attribute_index(attribute)
-    old_value = corresponding_db_entry[attribute_index]
-
-    # Save rollback entry to the journal
-    rollback_current_entry = DBLog(index, attribute, old_value, new_value, 'rolled-back')
-    DB_Log.append(rollback_current_entry)
-
-# Finds the index of a given attribute using the DB header
-def get_attribute_index(attribute):
-    database_header = data_base[0]
-    return database_header.index(attribute)
-
-# Find the corresponding entry to the transaction
-def get_database_entry(index):
-    current_entry = None
-    for entry in data_base:
-        if entry[0] == index:
-            current_entry = entry
-    return current_entry
 
 def transaction_processing(transaction):
     '''
@@ -104,14 +73,14 @@ def transaction_processing(transaction):
     '''
     index, attribute, new_value = transaction
 
-    attribute_index = get_attribute_index(attribute) # Find the index of the attribute using the header in the data_base list
-
-    current_entry = get_database_entry(index)
+    # Find the index of the attribute we're going to be accessing
+    attribute_index = get_attribute_index(attribute, data_base) # Find the index of the attribute using the header in the data_base list
+    # Retrieve the entry based off the transaction ID
+    current_entry = get_database_entry(index, data_base)
     # Save the current state before executing the transaction
     old_value = current_entry[attribute_index]
     # Commit the transaction 
     commit_transaction(int(index), attribute, attribute_index, old_value, new_value)
-
 
 
 def read_file(file_name:str)->list:
@@ -141,7 +110,7 @@ def is_there_a_failure()->bool:
     '''
         Simulates randomly a failure, returning True or False, accordingly
     '''
-    failure_weights = [0.7, 0.3] # Probability weights for an output of 0 (no failure) and 1 (failure), respectively
+    failure_weights = [0.6, 0.4] # Probability weights for an output of 0 (no failure) and 1 (failure), respectively
     value = random.choices([0, 1], weights=failure_weights, k=1)[0]
     if value == 1:
         result = True
@@ -149,24 +118,6 @@ def is_there_a_failure()->bool:
         result = False
     return result
 
-"""
-    Generate a report of changes between the previous and current versions of a database.
-
-    Parameters:
-    - previous_data (list): The old version of the database.
-    - current_data (list): The new version of the database.
-
-    Returns:
-    - list: A list containing strings describing the changes in the format: 
-            "[Row {row_index}. {attribute}: {old_value} --> {new_value}]"
-            Empty list if no changes are detected.
-"""
-# Prints out the data in the DB_Log list
-def print_db_log(DB_Log):
-    print("\nDATABASE LOG:")
-    print("--------------")
-    for entry in DB_Log:
-        print(entry)
 
 def main():
     global data_base
@@ -189,8 +140,8 @@ def main():
         print("A failure occured before any transactions could be processed...")
         for transaction in transactions: # add entries to the db_log to let the user know that the transaction did not go through
             id, attribute, new_value = transaction
-            old_value = get_database_entry(id)[get_attribute_index(attribute)]
-            log_entry = DBLog(id, attribute, old_value, new_value, 'not-executed')
+            old_value = get_database_entry(id, data_base)[get_attribute_index(attribute), data_base]
+            log_entry = LogEntry(id, attribute, old_value, new_value, 'not-executed')
             DB_Log.append(log_entry)
         return # Exit the main system
     while not failure:
@@ -214,8 +165,8 @@ def main():
             break  # Break out of the while loop if no transactions are remaining      
     if must_recover:
         print("Rolling back changes and recovering...")
-        apply_rollback(failing_transaction_index)
-        recovery_script(DB_Log)
+        apply_rollback() # Apply changes to the DB_Log 
+        recovery_script(DB_Log) # change the values in data_base based on the data from the DB_Log
     else:
         print("All transactions ended up well.")
         print("Updates to the database were COMMITTED to Committed_Employees_DB_ADV.csv!")
@@ -223,7 +174,11 @@ def main():
     print('The data entries AFTER updates -and RECOVERY, if necessary- are presented below:')
     for item in data_base:
         print(item)
+    
+    # Write and print the changes that have occured
+    write_to_secondary_memory(SECONDARY_MEMORY_FILE_PATH, data_base) # Final version of the database is written to secondary memory
+    print_db_log(DB_Log) # Output the contents of the DB Log
+    write_db_log_to_csv(JOURNAL_FILE_PATH, DB_Log)
 
 main() # Call the main function to perform transaction processing
-print_db_log(DB_Log) # Output the contents of the DB Log
-    
+
