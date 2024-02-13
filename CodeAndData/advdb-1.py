@@ -17,7 +17,6 @@ DATABASE_FILE_PATH = 'Employees_DB_ADV.csv'
 JOURNAL_FILE_PATH = 'DB_Log.csv'
 SECONDARY_MEMORY_FILE_PATH = 'Committed_Employees_DB_ADV.csv' # Using this instead of overwriting the original database file 
 
-
 def recovery_script(log_entries: list):
     '''
     Restore the database to a stable and sound condition by processing the DB log.
@@ -33,7 +32,6 @@ def recovery_script(log_entries: list):
             transaction = get_database_entry(str(index), data_base) # retrieve the entry at said index
             attribute_index = get_attribute_index(log_entry['attribute'], data_base) # find the position of the column / attribute that we're changing
             # --> We now have both the entry (m) and column (n) in our m x n matrix / data base, and we can revert the values to those in the log.
-
             data_base[int(transaction[0])][attribute_index] = log_entry['new_value'] # We use 'new_value' because in the log entry, after commit occurs, we change the old_value --> new_value
         elif status == 'committed':
             # If the transaction was committed, there is nothing to do

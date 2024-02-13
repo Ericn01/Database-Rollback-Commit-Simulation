@@ -1,2 +1,10 @@
 
 
+DATABASE LOG (1) 
+-------------------------
+Timestamp: 2024-02-13 13:03:18.291410, Transaction ID: 1, Attribute: Department, Old Value: Projects, New Value: Music, Transaction Status: committed
+Timestamp: 2024-02-13 13:03:18.292353, Transaction ID: 1, Attribute: Department, Old Value: Music, New Value: Projects, Transaction Status: rolled-back
+Timestamp: 2024-02-13 13:03:18.291570, Transaction ID: 5, Attribute: Civil_status, Old Value: Married, New Value: Divorced, Transaction Status: committed
+Timestamp: 2024-02-13 13:03:18.292355, Transaction ID: 5, Attribute: Civil_status, Old Value: Divorced, New Value: Married, Transaction Status: rolled-back
+-------------------------
+
