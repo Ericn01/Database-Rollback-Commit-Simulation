@@ -1,10 +1,21 @@
-
-
-DATABASE LOG (1) 
+DATABASE LOG (1)
 -------------------------
-Timestamp: 2024-02-13 13:03:18.291410, Transaction ID: 1, Attribute: Department, Old Value: Projects, New Value: Music, Transaction Status: committed
-Timestamp: 2024-02-13 13:03:18.292353, Transaction ID: 1, Attribute: Department, Old Value: Music, New Value: Projects, Transaction Status: rolled-back
-Timestamp: 2024-02-13 13:03:18.291570, Transaction ID: 5, Attribute: Civil_status, Old Value: Married, New Value: Divorced, Transaction Status: committed
-Timestamp: 2024-02-13 13:03:18.292355, Transaction ID: 5, Attribute: Civil_status, Old Value: Divorced, New Value: Married, Transaction Status: rolled-back
+Timestamp: 2024-02-14 11:12:50.605086, Transaction ID: 1, Attribute: Department, Old Value: Projects, New Value: Music, Transaction Status: not-executed
+Timestamp: 2024-02-14 11:12:50.605092, Transaction ID: 5, Attribute: Civil_status, Old Value: Married, New Value: Divorced, Transaction Status: not-executed
+Timestamp: 2024-02-14 11:12:50.605094, Transaction ID: 15, Attribute: Salary, Old Value: 321000, New Value: 200000, Transaction Status: not-executed
+-------------------------
+
+DATABASE LOG (2)
+-------------------------
+Timestamp: 2024-02-14 11:12:51.471712, Transaction ID: 1, Attribute: Department, Old Value: Projects, New Value: Music, Transaction Status: committed
+Timestamp: 2024-02-14 11:12:51.471892, Transaction ID: 5, Attribute: Civil_status, Old Value: Married, New Value: Divorced, Transaction Status: committed
+Timestamp: 2024-02-14 11:12:51.478559, Transaction ID: 15, Attribute: Salary, Old Value: 321000, New Value: 200000, Transaction Status: committed
+-------------------------
+
+DATABASE LOG (3)
+-------------------------
+Timestamp: 2024-02-14 11:16:19.185463, Transaction ID: 1, Attribute: Department, Old Value: Projects, New Value: Music, Transaction Status: not-executed
+Timestamp: 2024-02-14 11:16:19.185469, Transaction ID: 5, Attribute: Civil_status, Old Value: Married, New Value: Divorced, Transaction Status: not-executed
+Timestamp: 2024-02-14 11:16:19.185471, Transaction ID: 15, Attribute: Salary, Old Value: 321000, New Value: 200000, Transaction Status: not-executed
 -------------------------
 

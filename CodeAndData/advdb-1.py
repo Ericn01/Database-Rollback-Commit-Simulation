@@ -138,10 +138,10 @@ def main():
         print("A failure occured before any transactions could be processed...")
         for transaction in transactions: # add entries to the db_log to let the user know that the transaction did not go through
             id, attribute, new_value = transaction
-            old_value = get_database_entry(id, data_base)[get_attribute_index(attribute), data_base]
+            old_value = get_database_entry(id, data_base)[get_attribute_index(attribute, data_base)]
             log_entry = LogEntry(id, attribute, old_value, new_value, 'not-executed')
             DB_Log.append(log_entry)
-        return # Exit the main system
+        return 
     while not failure:
         transactions_remaining = True
         for index in range(number_of_transactions):
@@ -173,10 +173,10 @@ def main():
     for item in data_base:
         print(item)
     
-    # Write and print the changes that have occured
-    write_to_secondary_memory(SECONDARY_MEMORY_FILE_PATH, data_base) # Final version of the database is written to secondary memory
-    print_db_log(DB_Log) # Output the contents of the DB Log
-    write_db_log_to_csv(JOURNAL_FILE_PATH, DB_Log)
+
 
 main() # Call the main function to perform transaction processing
-
+# Write and print the changes that have occured
+write_to_secondary_memory(SECONDARY_MEMORY_FILE_PATH, data_base) # Final version of the database is written to secondary memory
+print_db_log(DB_Log) # Output the contents of the DB Log
+write_db_log_to_csv(JOURNAL_FILE_PATH, DB_Log)
